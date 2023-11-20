@@ -5,6 +5,10 @@ ggplot2::theme_set(theme_classic(base_size=18))
 set.seed(545)
 
 ### ### ### ### ### ### ### ### ### ### ### ###
+### ### ### ### ### ### ### ### ### ### ### ###
+#  SETUP ######################################
+### ### ### ### ### ### ### ### ### ### ### ###
+### ### ### ### ### ### ### ### ### ### ### ###
 # define target distribution
 pmu <- c(0,0)
 psigma <- matrix(data=c(2,0.9,0.9,10),nrow=2)
@@ -40,6 +44,12 @@ run_mcmc <- function(x0,sigma,steps){
 }
 ### ### ### ### ### ### ### ### ### ### ### ### ### ###
 
+
+### ### ### ### ### ### ### ### ### ### ### ###
+### ### ### ### ### ### ### ### ### ### ### ###
+#  USER INTERFACE #############################
+### ### ### ### ### ### ### ### ### ### ### ###
+### ### ### ### ### ### ### ### ### ### ### ###
 ui <- fluidPage(
   sliderInput("steps", "Select the number of MCMC iterations",
               min=1,max=1000,value=100,step=1,round=TRUE),
@@ -53,35 +63,43 @@ ui <- fluidPage(
   plotOutput("ergodic")
 )
 
+### ### ### ### ### ### ### ### ### ### ### ###
+### ### ### ### ### ### ### ### ### ### ### ###
+#  SERVER #####################################
+### ### ### ### ### ### ### ### ### ### ### ###
+### ### ### ### ### ### ### ### ### ### ### ###
 server <- function(input, output){
+  # run mcmc algorithm with settings specified by user
   mcmc_x <- reactive({
     run_mcmc(x0=c(input$x1,input$x2),sigma=input$sigma,steps=input$steps) %>% 
     as_tibble() %>% 
     rename(x1=V1,x2=V2)
   })
   
+  # create contour and scatter plots
   output$contour <- renderPlot({
     mcmc_x() %>% 
       ggplot() +
-      geom_point(aes(x1,x2,color="#f98e09"),
+      geom_point(aes(x1,x2,color="#f98e09"), # scatter with sample
                  size=2.5) +
       geom_contour(data=psamp, 
-                   aes(x=x1,y=x2,z=prob,color="black")) +
+                   aes(x=x1,y=x2,z=prob,color="black")) + # contour with target
       labs(x="x",y="y") +
       scale_colour_manual(name = "", 
                           values =c("#f98e09"="#f98e09","black"="black"), 
                           labels = c("MCMC","Target"))
   })
   
+  # generate ergodic averages plot
   output$ergodic <- renderPlot({
     mcmc_x() %>% 
       mutate(iter = 1:n(),
-             erg_mean1 = cummean(x1),
-             erg_mean2 = cummean(x2)) %>% 
+             erg_mean1 = cummean(x1), # x erg avg
+             erg_mean2 = cummean(x2)) %>%  # y erg avg
       ggplot() +
-      geom_line(aes(iter,erg_mean1,color="#21918c")) +
-      geom_line(aes(iter,erg_mean2,color="#3b528b")) +
-      geom_hline(yintercept = 0,color="black", linetype="dashed") +
+      geom_line(aes(iter,erg_mean1,color="#21918c")) + # x erg avg
+      geom_line(aes(iter,erg_mean2,color="#3b528b")) + # y erg avg
+      geom_hline(yintercept = 0,color="black", linetype="dashed") + #true
       labs(x="Iteration number",
            y="Ergodic mean") +
       scale_colour_manual(name = "", 
