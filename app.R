@@ -1,4 +1,5 @@
 library(shiny)
+library(shinythemes)
 library(tidyverse)
 library(mvtnorm)
 ggplot2::theme_set(theme_classic(base_size=18))
@@ -50,7 +51,7 @@ run_mcmc <- function(x0,sigma,steps){
 #  USER INTERFACE #############################
 ### ### ### ### ### ### ### ### ### ### ### ###
 ### ### ### ### ### ### ### ### ### ### ### ###
-ui <- fluidPage(
+ui <- fluidPage(theme = shinytheme("paper"),
   titlePanel("Markov chain Monte Carlo (MCMC) demo"),
   h4("Use this app to explore the behaviour of an MCMC random walk algorithm"),
   p("The MCMC algorithm targets a fixed bivariate Normal distribution 
@@ -72,7 +73,7 @@ ui <- fluidPage(
     ),
     mainPanel(
       tabsetPanel(type="tabs",
-                  tabPanel("Qualitative assessment",plotOutput("contour")),
+                  tabPanel("Qualitative assessment", plotOutput("contour")),
                   tabPanel("Quantitative assesment", plotOutput("ergodic"))
       )
     )
