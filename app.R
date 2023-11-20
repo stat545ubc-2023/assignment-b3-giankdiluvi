@@ -43,13 +43,19 @@ run_mcmc <- function(x0,sigma,steps){
 ui <- fluidPage(
   sliderInput("steps", "Select the number of MCMC iterations",
               min=1,max=1000,value=100,step=1,round=TRUE),
+  sliderInput("x1", "Select initial x1 value for sampler",
+              min=-20,max=20,value=10,step=0.01),
+  sliderInput("x2", "Select initial x2 value for sampler",
+              min=-20,max=20,value=10,step=0.01),
+  sliderInput("sigma", "Select proposal standard deviation for sampler",
+              min=0.1,max=5,value=3,step=0.01),
   plotOutput("contour"),
   plotOutput("ergodic")
 )
 
 server <- function(input, output){
   mcmc_x <- reactive({
-    run_mcmc(x0=c(10,10),sigma=3,steps=input$steps) %>% 
+    run_mcmc(x0=c(input$x1,input$x2),sigma=input$sigma,steps=input$steps) %>% 
     as_tibble() %>% 
     rename(x1=V1,x2=V2)
   })
