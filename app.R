@@ -59,7 +59,7 @@ ui <- fluidPage(theme = shinytheme("paper"),
   p("You can control the number of steps of the MCMC sampler,
     as well as the initial point and the variance of the proposal distribution"),
   p("The contour and scatter plot provides a qualitative assessment of convergence
-    while the ergodic average plot provides a quantitative assesment thereof."),
+    while the ergodic average plot provides a quantitative assessment thereof."),
   sidebarLayout(
     sidebarPanel(
       sliderInput("steps", "Select the number of MCMC iterations",
@@ -73,8 +73,20 @@ ui <- fluidPage(theme = shinytheme("paper"),
     ),
     mainPanel(
       tabsetPanel(type="tabs",
-                  tabPanel("Qualitative assessment", plotOutput("contour")),
-                  tabPanel("Quantitative assesment", plotOutput("ergodic"))
+                  tabPanel("Qualitative assessment", 
+                           selectInput("plot_type",
+                                       label="Select the type of plot",
+                                       choices = c("Scatter","KDE")),
+                           plotOutput("contour")),
+                  tabPanel("Quantitative assessment", 
+                           p("The ergodic average refers to the cumulative mean
+                             of the variables as a function of the iteration number.
+                             The plot below shows the ergodic averages of both variables,
+                             along with the (known) true mean of 0."),
+                           p("We expect the ergodic averages to converge to the true mean
+                             as the iterations grow, and we can use this as
+                             a quantitative assessment of the sampler's performance."),
+                           plotOutput("ergodic"))
       )
     )
   )
@@ -95,16 +107,29 @@ server <- function(input, output){
   
   # create contour and scatter plots
   output$contour <- renderPlot({
-    mcmc_x() %>% 
-      ggplot() +
-      geom_point(aes(x1,x2,color="#f98e09"), # scatter with sample
-                 size=2.5) +
-      geom_contour(data=psamp, 
-                   aes(x=x1,y=x2,z=prob,color="black")) + # contour with target
-      labs(x="x",y="y") +
-      scale_colour_manual(name = "", 
-                          values =c("#f98e09"="#f98e09","black"="black"), 
-                          labels = c("MCMC","Target"))
+    if(input$plot_type=="Scatter"){
+      mcmc_x() %>% 
+        ggplot() +
+        geom_point(aes(x1,x2,color="#f98e09"), # scatter with sample
+                   size=2.5) +
+        geom_contour(data=psamp, 
+                     aes(x=x1,y=x2,z=prob,color="black")) + # contour with target
+        labs(x="x",y="y") +
+        scale_colour_manual(name = "", 
+                            values =c("#f98e09"="#f98e09","black"="black"), 
+                            labels = c("MCMC","Target"))
+    }else{
+      mcmc_x() %>% 
+        ggplot() +
+        geom_density_2d(aes(x1,x2,color="#f98e09")) + # contour with mcmc sample
+        geom_contour(data=psamp, 
+                     aes(x=x1,y=x2,z=prob,color="black")) + # contour with target
+        labs(x="x",y="y") +
+        scale_colour_manual(name = "", 
+                            values =c("#f98e09"="#f98e09","black"="black"), 
+                            labels = c("MCMC","Target"))
+    }
+    
   })
   
   # generate ergodic averages plot
