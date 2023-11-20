@@ -41,17 +41,21 @@ run_mcmc <- function(x0,sigma,steps){
 ### ### ### ### ### ### ### ### ### ### ### ### ### ###
 
 ui <- fluidPage(
+  sliderInput("steps", "Select the number of MCMC iterations",
+              min=1,max=1000,value=100,step=1,round=TRUE),
   plotOutput("contour"),
   plotOutput("ergodic")
 )
 
 server <- function(input, output){
-  mcmc_x <- run_mcmc(x0=c(10,10),sigma=3,steps=400) %>% 
+  mcmc_x <- reactive({
+    run_mcmc(x0=c(10,10),sigma=3,steps=input$steps) %>% 
     as_tibble() %>% 
     rename(x1=V1,x2=V2)
+  })
   
   output$contour <- renderPlot({
-    mcmc_x %>% 
+    mcmc_x() %>% 
       ggplot() +
       geom_point(aes(x1,x2,color="#f98e09"),
                  size=2.5) +
@@ -64,7 +68,7 @@ server <- function(input, output){
   })
   
   output$ergodic <- renderPlot({
-    mcmc_x %>% 
+    mcmc_x() %>% 
       mutate(iter = 1:n(),
              erg_mean1 = cummean(x1),
              erg_mean2 = cummean(x2)) %>% 
