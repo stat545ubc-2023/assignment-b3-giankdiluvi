@@ -53,12 +53,14 @@ server <- function(input, output){
   output$contour <- renderPlot({
     mcmc_x %>% 
       ggplot() +
-      geom_point(aes(x1,x2),
-                 color = "blue") +
+      geom_point(aes(x1,x2,color="#f98e09"),
+                 size=2.5) +
       geom_contour(data=psamp, 
-                   aes(x=x1,y=x2,z=prob),
-                   color = "black") +
-      labs(x="x",y="y")
+                   aes(x=x1,y=x2,z=prob,color="black")) +
+      labs(x="x",y="y") +
+      scale_colour_manual(name = "", 
+                          values =c("#f98e09"="#f98e09","black"="black"), 
+                          labels = c("MCMC","Target"))
   })
   
   output$ergodic <- renderPlot({
