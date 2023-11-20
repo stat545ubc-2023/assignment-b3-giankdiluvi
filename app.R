@@ -1,12 +1,29 @@
 library(shiny)
 library(tidyverse)
 library(mvtnorm)
+ggplot2::theme_set(theme_classic(base_size=18))
 set.seed(545)
 
+### ### ### ### ### ### ### ### ### ### ### ###
 # define target distribution
 pmu <- c(0,0)
 psigma <- matrix(data=c(2,0.9,0.9,10),nrow=2)
 
+# sample from target for contours
+data_grid <- expand.grid(x1 = seq(-6, 6, length.out=200), x2 = seq(-12, 12, length.out=200))
+psamp <- cbind(data_grid, prob = mvtnorm::dmvnorm(data_grid, mean = pmu, sigma = psigma)) %>% 
+  as_tibble()
+
+# the function below runs a random walk MCMC algorithm
+# targeting a N(pmu,psigma) distribution as defined above
+#
+# Inputs: 
+#   x0:    vector of size 2, initial value
+#   sigma: positive scalar, scale of proposal distribution (isotropic Normal)
+#   steps: int, number of MCMC iterations
+# 
+# Outputs:
+#   x:    matrix of size (steps+1,2), samples
 run_mcmc <- function(x0,sigma,steps){
   x <- matrix(data=x0,nrow=1)
   qsigma <- matrix(data=c(sigma**2,0,0,sigma**2),nrow=2)
@@ -21,15 +38,43 @@ run_mcmc <- function(x0,sigma,steps){
   row.names(x) <- NULL
   return(x)
 }
+### ### ### ### ### ### ### ### ### ### ### ### ### ###
 
 ui <- fluidPage(
-  plotOutput("contour")
+  plotOutput("contour"),
+  plotOutput("ergodic")
 )
 
 server <- function(input, output){
+  mcmc_x <- run_mcmc(x0=c(10,10),sigma=3,steps=400) %>% 
+    as_tibble() %>% 
+    rename(x1=V1,x2=V2)
   
   output$contour <- renderPlot({
-    
+    mcmc_x %>% 
+      ggplot() +
+      geom_point(aes(x1,x2),
+                 color = "blue") +
+      geom_contour(data=psamp, 
+                   aes(x=x1,y=x2,z=prob),
+                   color = "black") +
+      labs(x="x",y="y")
+  })
+  
+  output$ergodic <- renderPlot({
+    mcmc_x %>% 
+      mutate(iter = 1:n(),
+             erg_mean1 = cummean(x1),
+             erg_mean2 = cummean(x2)) %>% 
+      ggplot() +
+      geom_line(aes(iter,erg_mean1,color="#21918c")) +
+      geom_line(aes(iter,erg_mean2,color="#3b528b")) +
+      geom_hline(yintercept = 0,color="black", linetype="dashed") +
+      labs(x="Iteration number",
+           y="Ergodic mean") +
+      scale_colour_manual(name = "", 
+                          values =c("#21918c"="#21918c","#3b528b"="#3b528b"), 
+                          labels = c("x","y"))
   })
 }
 
