@@ -107,29 +107,28 @@ server <- function(input, output){
   
   # create contour and scatter plots
   output$contour <- renderPlot({
+    # init plot
+    p <- mcmc_x() %>% 
+      ggplot() +
+      geom_contour(data=psamp, 
+                   aes(x=x1,y=x2,z=prob,color="black")) +
+      labs(x="x",y="y")
+    
     if(input$plot_type=="Scatter"){
-      mcmc_x() %>% 
-        ggplot() +
+      p <- p +
         geom_point(aes(x1,x2,color="#f98e09"), # scatter with sample
-                   size=2.5) +
-        geom_contour(data=psamp, 
-                     aes(x=x1,y=x2,z=prob,color="black")) + # contour with target
-        labs(x="x",y="y") +
-        scale_colour_manual(name = "", 
-                            values =c("#f98e09"="#f98e09","black"="black"), 
-                            labels = c("MCMC","Target"))
+                   size=2.5)
     }else{
-      mcmc_x() %>% 
-        ggplot() +
-        geom_density_2d(aes(x1,x2,color="#f98e09")) + # contour with mcmc sample
-        geom_contour(data=psamp, 
-                     aes(x=x1,y=x2,z=prob,color="black")) + # contour with target
-        labs(x="x",y="y") +
-        scale_colour_manual(name = "", 
-                            values =c("#f98e09"="#f98e09","black"="black"), 
-                            labels = c("MCMC","Target"))
+      p <- p +
+        geom_density_2d(aes(x1,x2,color="#f98e09")) # contour with sample
     }
     
+    # add color labels to plot
+    p <- p +
+      scale_colour_manual(name = "", 
+                          values =c("#f98e09"="#f98e09","black"="black"), 
+                          labels = c("MCMC","Target"))
+    p
   })
   
   # generate ergodic averages plot
