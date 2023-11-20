@@ -71,8 +71,10 @@ ui <- fluidPage(
                   min=0.1,max=5,value=3,step=0.01)
     ),
     mainPanel(
-      plotOutput("contour"),
-      plotOutput("ergodic")
+      tabsetPanel(type="tabs",
+                  tabPanel("Qualitative assessment",plotOutput("contour")),
+                  tabPanel("Quantitative assesment", plotOutput("ergodic"))
+      )
     )
   )
 )
