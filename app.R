@@ -51,16 +51,30 @@ run_mcmc <- function(x0,sigma,steps){
 ### ### ### ### ### ### ### ### ### ### ### ###
 ### ### ### ### ### ### ### ### ### ### ### ###
 ui <- fluidPage(
-  sliderInput("steps", "Select the number of MCMC iterations",
-              min=1,max=1000,value=100,step=1,round=TRUE),
-  sliderInput("x1", "Select initial x1 value for sampler",
-              min=-20,max=20,value=10,step=0.01),
-  sliderInput("x2", "Select initial x2 value for sampler",
-              min=-20,max=20,value=10,step=0.01),
-  sliderInput("sigma", "Select proposal standard deviation for sampler",
-              min=0.1,max=5,value=3,step=0.01),
-  plotOutput("contour"),
-  plotOutput("ergodic")
+  titlePanel("Markov chain Monte Carlo (MCMC) demo"),
+  h4("Use this app to explore the behaviour of an MCMC random walk algorithm"),
+  p("The MCMC algorithm targets a fixed bivariate Normal distribution 
+    with mean at the origin, variances 4 and 100 (respectively) and covariance 0.9."),
+  p("You can control the number of steps of the MCMC sampler,
+    as well as the initial point and the variance of the proposal distribution"),
+  p("The contour and scatter plot provides a qualitative assessment of convergence
+    while the ergodic average plot provides a quantitative assesment thereof."),
+  sidebarLayout(
+    sidebarPanel(
+      sliderInput("steps", "Select the number of MCMC iterations",
+                  min=1,max=1000,value=100,step=1,round=TRUE),
+      sliderInput("x1", "Select initial x1 value for sampler",
+                  min=-20,max=20,value=10,step=0.01),
+      sliderInput("x2", "Select initial x2 value for sampler",
+                  min=-20,max=20,value=10,step=0.01),
+      sliderInput("sigma", "Select proposal standard deviation for sampler",
+                  min=0.1,max=5,value=3,step=0.01)
+    ),
+    mainPanel(
+      plotOutput("contour"),
+      plotOutput("ergodic")
+    )
+  )
 )
 
 ### ### ### ### ### ### ### ### ### ### ### ###
